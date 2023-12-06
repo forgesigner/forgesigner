@@ -9,31 +9,27 @@
 
 ImageViewer::ImageViewer(QWidget* parent)
     : QMainWindow(parent) {
-    // Set up the main window
     setWindowTitle("Image Viewer");
     setCentralWidget(new QWidget);
 
-    // Assuming your images are in a directory named "images"
     QDir imageDir("images");
     QStringList filters;
     filters << "*.png"
             << "*.jpg"
             << "*.jpeg"
-            << "*.bmp";  // Add more formats if needed
+            << "*.bmp";
     imageDir.setNameFilters(filters);
-    QStringList imageFiles = imageDir.entryList();
+    const auto filePath = imageDir.absoluteFilePath(imageDir.entryList()[0]);
 
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget());
 
-    for (const QString& fileName : imageFiles) {
-        m_image = new QLabel(this);
-        m_image->setAlignment(Qt::AlignCenter);
-        m_image->setIndent(0);
-        m_image->setMargin(0);
-        QPixmap pixmap(imageDir.absoluteFilePath(fileName));
-        m_image->setPixmap(pixmap);
-        mainLayout->addWidget(m_image);
-    }
+    m_image = new QLabel(this);
+    m_image->setAlignment(Qt::AlignCenter);
+    m_image->setIndent(0);
+    m_image->setMargin(0);
+    QPixmap pixmap(filePath);
+    m_image->setPixmap(pixmap);
+    mainLayout->addWidget(m_image);
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent* event) {
