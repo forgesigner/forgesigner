@@ -50,17 +50,18 @@ void ImageViewer::mousePressEvent(QMouseEvent* event) {
     qDebug() << "Mouse click position relative to the image: ("
              << x << ", " << y << ")";
 
-    // Draw a small circle at the clicked position
+    // Draw a small red square at the clicked position
     const auto circleLabel = new QLabel(m_image);
-    QPixmap circlePixmap(10, 10);  // Size of the circle
-    circlePixmap.fill(Qt::red);  // Color of the circle
+    QPixmap circlePixmap(10, 10);
+    circlePixmap.fill(Qt::red);
 
     circleLabel->setPixmap(circlePixmap);
     circleLabel->setAlignment(Qt::AlignCenter);
 
     auto circlePos = event->pos() - labelPos;
-    circlePos -= QPoint(circlePixmap.size().width() / 2,
-                        circlePixmap.size().height() / 2);
+    // Center it.
+    circlePos -= QPoint(circlePixmap.width() / 2,
+                        circlePixmap.height() / 2);
 
     circleLabel->move(circlePos);
     circleLabel->show();
