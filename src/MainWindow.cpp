@@ -10,29 +10,31 @@
 #include <QMouseEvent>
 #include <QVBoxLayout>
 
-QString getImageFilePath(const int index = 0) {
-    QDir imageDir("images");
-    QStringList filters;
-    filters << "*.png"
-            << "*.jpg"
-            << "*.jpeg"
-            << "*.bmp";
-    imageDir.setNameFilters(filters);
+namespace {
+    QString getImageFilePath(const int index = 0) {
+        QDir imageDir("images");
+        QStringList filters;
+        filters << "*.png"
+                << "*.jpg"
+                << "*.jpeg"
+                << "*.bmp";
+        imageDir.setNameFilters(filters);
 
-    const auto fileNames = imageDir.entryList();
-    if (index < 0 || index >= fileNames.size()) {
-        return QString();
+        const auto fileNames = imageDir.entryList();
+        if (index < 0 || index >= fileNames.size()) {
+            return QString();
+        }
+        const auto filePath = imageDir.absoluteFilePath(fileNames[index]);
+        return filePath;
     }
-    const auto filePath = imageDir.absoluteFilePath(fileNames[index]);
-    return filePath;
-}
 
-QWidget* getSeparatorWidget(QWidget* parent) {
-    QFrame* separator = new QFrame(parent);
-    separator->setFrameShape(QFrame::VLine);
-    separator->setFrameShadow(QFrame::Sunken);
-    return separator;
-}
+    QWidget* getSeparatorWidget(QWidget* parent) {
+        QFrame* separator = new QFrame(parent);
+        separator->setFrameShape(QFrame::VLine);
+        separator->setFrameShadow(QFrame::Sunken);
+        return separator;
+    }
+}  // namespace
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
