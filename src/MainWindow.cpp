@@ -9,9 +9,9 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
-#include <QVBoxLayout>
 #include <QPainter>
 #include <QPdfWriter>
+#include <QVBoxLayout>
 
 namespace {
     QWidget* getSeparatorWidget(QWidget* parent) {
@@ -136,7 +136,7 @@ void MainWindow::onFinishedSigning() {
 
 void MainWindow::writeSignedPdf(const QString& pdfFileName) {
     qDebug() << "MainWindow::writeSignedPdf, writing to" << pdfFileName;
-    
+
     QPdfWriter pdfWriter(pdfFileName);
     pdfWriter.setPageSize(QPageSize(QPageSize::A4));
 
@@ -158,9 +158,9 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
 QPixmap MainWindow::paintSignaturesOnPage(int pageIndex) {
     auto page = getPage(pageIndex);
     const auto signature = getSignaturePixmap();
-    
+
     QPainter painter(&page);
-    for (const auto signatureWidgetPtr: m_signatures[pageIndex]) {
+    for (const auto signatureWidgetPtr : m_signatures[pageIndex]) {
         if (signatureWidgetPtr == nullptr) {
             continue;
         }
@@ -168,6 +168,6 @@ QPixmap MainWindow::paintSignaturesOnPage(int pageIndex) {
         painter.drawPixmap(position, signature);
     }
     painter.end();
-        
+
     return page;
 }
