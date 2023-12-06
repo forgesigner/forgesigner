@@ -1,7 +1,7 @@
 #include "Sidebar.h"
 
-#include <QPushButton>
 #include <QHBoxLayout>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 Sidebar::Sidebar(QWidget* parent)
@@ -20,7 +20,6 @@ Sidebar::Sidebar(QWidget* parent)
 
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(twoBtnsWidget);
-
 }
 
 Sidebar::~Sidebar() {

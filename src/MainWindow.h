@@ -2,9 +2,8 @@
 
 #include "SignatureTargetWidget.h"
 
-#include <QMainWindow>
-#include <QPointer>
 #include <QList>
+#include <QMainWindow>
 #include <QPointer>
 
 class QLabel;
