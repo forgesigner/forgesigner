@@ -1,17 +1,13 @@
 #include "ImageViewer.h"
 
 #include <QDir>
-#include <QEvent>
-#include <QLabel>
+#include <QFrame>
 #include <QMouseEvent>
-#include <QScrollArea>
+#include <QLabel>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 
-ImageViewer::ImageViewer(QWidget* parent)
-    : QMainWindow(parent) {
-    setWindowTitle("Image Viewer");
-    setCentralWidget(new QWidget);
-
+QString getImageFilePath() {
     QDir imageDir("images");
     QStringList filters;
     filters << "*.png"
@@ -20,15 +16,34 @@ ImageViewer::ImageViewer(QWidget* parent)
             << "*.bmp";
     imageDir.setNameFilters(filters);
     const auto filePath = imageDir.absoluteFilePath(imageDir.entryList()[0]);
+    return filePath;
+}
+
+QWidget* getSeparatorWidget(QWidget* parent) {
+    QFrame* separator = new QFrame(parent);
+    separator->setFrameShape(QFrame::VLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    return separator;
+}
+
+ImageViewer::ImageViewer(QWidget* parent)
+    : QMainWindow(parent)
+    , m_sidebar(new Sidebar(this)) {
+    setWindowTitle("Image Viewer");
+    setCentralWidget(new QWidget);
 
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget());
+
+    mainLayout->addWidget(m_sidebar);
+    mainLayout->addWidget(getSeparatorWidget(this));
 
     m_image = new QLabel(this);
     m_image->setAlignment(Qt::AlignCenter);
     m_image->setIndent(0);
     m_image->setMargin(0);
-    QPixmap pixmap(filePath);
+    QPixmap pixmap(getImageFilePath());
     m_image->setPixmap(pixmap);
+
     mainLayout->addWidget(m_image);
 }
 

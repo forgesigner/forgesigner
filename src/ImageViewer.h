@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Sidebar.h"
+
 #include <QMainWindow>
 
 class QScrollArea;
@@ -16,4 +18,5 @@ public:
 
 private:
     QLabel* m_image{nullptr};
+    Sidebar* m_sidebar{nullptr};
 };

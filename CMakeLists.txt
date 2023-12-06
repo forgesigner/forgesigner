@@ -10,6 +10,7 @@ find_package(Qt6 COMPONENTS Widgets REQUIRED)
 set(SOURCES
     src/main.cpp
     src/ImageViewer.cpp
+    src/Sidebar.cpp
 )
 
 # # Doesn't work due to following error:
