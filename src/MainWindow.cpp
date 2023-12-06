@@ -63,25 +63,71 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(m_sidebar, &Sidebar::gotNextPage, this, &MainWindow::onNextImage);
     connect(m_sidebar, &Sidebar::gotPrevPage, this, &MainWindow::onPrevImage);
+
+    connect(m_imageViewer, &ImageViewer::gotNewSignature, this, &MainWindow::onNewSignature);
+
+    m_signatures.resize(getPageCount());
+}
+
+MainWindow::~MainWindow() {
+}
+
+void MainWindow::onNewSignature(QPoint position) {
+    // Draw a small red square at the clicked position
+    auto signature = QPointer(new SignatureTargetWidget(QPixmap("images/signature.png"), m_imageViewer));
+    m_signatures[m_currentImageIndex].append(signature);
+
+    // Center it.
+    position -= QPoint(signature->width() / 2,
+                       signature->height() / 2);
+    signature->move(position);
+    signature->show();
 }
 
 void MainWindow::onNextImage() {
     const auto filePath = getImageFilePath(m_currentImageIndex + 1);
-    if (!filePath.isEmpty()) {
-        QPixmap pixmap(filePath);
-        m_imageViewer->setPixmap(pixmap);
-        ++m_currentImageIndex;
+    if (filePath.isEmpty()) {
+        return;
     }
+
+    QPixmap pixmap(filePath);
+    m_imageViewer->setPixmap(pixmap);
+
+    hideSignatures(m_currentImageIndex);
+    ++m_currentImageIndex;
+    showSignatures(m_currentImageIndex);
 }
 
 void MainWindow::onPrevImage() {
     const auto filePath = getImageFilePath(m_currentImageIndex - 1);
-    if (!filePath.isEmpty()) {
-        QPixmap pixmap(filePath);
-        m_imageViewer->setPixmap(pixmap);
-        --m_currentImageIndex;
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    QPixmap pixmap(filePath);
+    m_imageViewer->setPixmap(pixmap);
+
+    hideSignatures(m_currentImageIndex);
+    --m_currentImageIndex;
+    showSignatures(m_currentImageIndex);
+}
+
+void MainWindow::hideSignatures(int pageIndex) {
+    for (auto signature : m_signatures[pageIndex]) {
+        if (signature != nullptr) {
+            signature->hide();
+        }
     }
 }
 
-MainWindow::~MainWindow() {
+void MainWindow::showSignatures(int pageIndex) {
+    for (auto signature : m_signatures[pageIndex]) {
+        if (signature != nullptr) {
+            signature->show();
+        }
+    }
+}
+
+void MainWindow::filterRemovedSignatures(int pageIndex) {
+    erase_if(m_signatures[pageIndex], [](auto p) { return p == nullptr; });
 }

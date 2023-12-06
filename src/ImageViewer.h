@@ -12,4 +12,7 @@ public:
     explicit ImageViewer(QWidget* parent = nullptr);
     void mousePressEvent(QMouseEvent* event) override;
     ~ImageViewer() override;
+
+Q_SIGNALS:
+    void gotNewSignature(QPoint position) const;
 };

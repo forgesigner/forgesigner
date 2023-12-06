@@ -15,19 +15,7 @@ void ImageViewer::mousePressEvent(QMouseEvent* event) {
     if (event->button() != Qt::LeftButton) {
         return;
     }
-
-    qDebug() << event->position();
-
-    // Draw a small red square at the clicked position
-    const auto signature = new SignatureTargetWidget(QPixmap("images/signature.png"), this);
-
-    auto squarePos = event->position().toPoint();
-    // Center it.
-    squarePos -= QPoint(signature->width() / 2,
-                        signature->height() / 2);
-
-    signature->move(squarePos);
-    signature->show();
+    Q_EMIT gotNewSignature(event->position().toPoint());
 }
 
 ImageViewer::~ImageViewer() {

@@ -6,7 +6,7 @@ SignatureTargetWidget::SignatureTargetWidget(const QPixmap& signaturePic,
                                              QWidget* parent)
     : QLabel(parent) {
     setPixmap(signaturePic);
-    // setFixedSize(signaturePic.size());  // TODO: not needed?
+    setFixedSize(signaturePic.size());
 
     setIndent(0);
     setMargin(0);
