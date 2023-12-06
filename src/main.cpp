@@ -1,0 +1,12 @@
+#include "ImageViewer.h"
+
+#include <QApplication>
+
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
+
+    ImageViewer imageViewer;
+    imageViewer.show();
+
+    return QApplication::exec();
+}
