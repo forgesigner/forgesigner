@@ -3,12 +3,15 @@
 #include "ImageViewer.h"
 #include "Sidebar.h"
 
+#include <QDesktopServices>
 #include <QDir>
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QVBoxLayout>
+#include <QPainter>
+#include <QPdfWriter>
 
 namespace {
     QWidget* getSeparatorWidget(QWidget* parent) {
@@ -27,6 +30,7 @@ namespace {
 
 MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
     : QMainWindow(parent)
+    , m_pdfFilePath(pdfFilePath)
     , m_pdfDoc(this)
     , m_sidebar(new Sidebar(this))
     , m_imageViewer(new ImageViewer(this)) {
@@ -55,6 +59,8 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
 
     connect(m_sidebar, &Sidebar::gotNextPage, this, &MainWindow::onNextPage);
     connect(m_sidebar, &Sidebar::gotPrevPage, this, &MainWindow::onPrevPage);
+    connect(m_sidebar, &Sidebar::gotFinishedSigning, this, &MainWindow::onFinishedSigning);
+
     connect(m_imageViewer, &ImageViewer::gotNewSignature, this, &MainWindow::onNewSignature);
 }
 
@@ -121,4 +127,47 @@ QPixmap MainWindow::getPage(int pageIndex) {
     */
     auto image = m_pdfDoc.render(pageIndex, size.toSize());
     return QPixmap::fromImage(image);
+}
+
+void MainWindow::onFinishedSigning() {
+    const auto pdfFileName = QString("output.pdf");
+    writeSignedPdf(pdfFileName);
+}
+
+void MainWindow::writeSignedPdf(const QString& pdfFileName) {
+    qDebug() << "MainWindow::writeSignedPdf, writing to" << pdfFileName;
+    
+    QPdfWriter pdfWriter(pdfFileName);
+    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+
+    QPainter pdfPainter(&pdfWriter);
+    pdfPainter.setRenderHint(QPainter::Antialiasing);
+
+    for (int pageIndex = 0; pageIndex < m_pdfDoc.pageCount(); ++pageIndex) {
+        auto signedPage = paintSignaturesOnPage(pageIndex);
+        // pdfPainter.drawImage(pdfWriter.pageSize().sizePoints(), signedPage);
+        pdfPainter.drawImage(pdfWriter.pageLayout().paintRect(), signedPage.toImage());
+        pdfWriter.newPage();
+    }
+
+    pdfPainter.end();
+    qDebug() << "MainWindow::writeSignedPdf, finished writing";
+    QDesktopServices::openUrl(pdfFileName);
+}
+
+QPixmap MainWindow::paintSignaturesOnPage(int pageIndex) {
+    auto page = getPage(pageIndex);
+    const auto signature = getSignaturePixmap();
+    
+    QPainter painter(&page);
+    for (const auto signatureWidgetPtr: m_signatures[pageIndex]) {
+        if (signatureWidgetPtr == nullptr) {
+            continue;
+        }
+        const auto position = signatureWidgetPtr->pos();
+        painter.drawPixmap(position, signature);
+    }
+    painter.end();
+        
+    return page;
 }

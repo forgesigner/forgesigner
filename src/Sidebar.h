@@ -14,8 +14,10 @@ public:
 Q_SIGNALS:
     void gotNextPage();
     void gotPrevPage();
+    void gotFinishedSigning();
 
 private:
     QPushButton* m_nextPageBtn{nullptr};
     QPushButton* m_prevPageBtn{nullptr};
+    QPushButton* m_finishSigningBtn{nullptr};
 };

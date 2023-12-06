@@ -34,7 +34,12 @@ private:
 
     QPixmap getPage(int pageIndex);
 
+    void onFinishedSigning();
+    void writeSignedPdf(const QString& pdfFilePath);
+    QPixmap paintSignaturesOnPage(int pageIndex);
+
 private:
+    const QString m_pdfFilePath;
     QPdfDocument m_pdfDoc{};
 
     int m_currentPageIndex{0};
