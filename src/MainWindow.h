@@ -32,6 +32,8 @@ private:
     void showSignatures(int pageIndex);
     void filterRemovedSignatures(int pageIndex);
 
+    QPixmap getPage(int pageIndex);
+
 private:
     QPdfDocument m_pdfDoc{};
 

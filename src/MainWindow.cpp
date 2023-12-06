@@ -11,34 +11,17 @@
 #include <QVBoxLayout>
 
 namespace {
-    QStringList getFilePathList() {
-        QDir imageDir("images");
-        QStringList filters;
-        filters << "*.png"
-                << "*.jpg"
-                << "*.jpeg"
-                << "*.bmp";
-        imageDir.setNameFilters(filters);
-        auto filePathList = imageDir.entryList();
-        for (auto& fileName : filePathList) {
-            fileName = imageDir.absoluteFilePath(fileName);
-        }
-        return filePathList;
-    }
-
-    QString getImageFilePath(const int index = 0) {
-        const auto filePathList = getFilePathList();
-        if (index < 0 || index >= filePathList.size()) {
-            return QString();
-        }
-        return filePathList[index];
-    }
-
     QWidget* getSeparatorWidget(QWidget* parent) {
         QFrame* separator = new QFrame(parent);
         separator->setFrameShape(QFrame::VLine);
         separator->setFrameShadow(QFrame::Sunken);
         return separator;
+    }
+
+    QPixmap getSignaturePixmap() {
+        auto pixmap = QPixmap("images/signature.png");
+        pixmap = pixmap.scaled(pixmap.size() * 0.3, Qt::KeepAspectRatio);
+        return pixmap;
     }
 }  // namespace
 
@@ -65,7 +48,8 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
         qFatal() << "couldn't load PDF file" << pdfFilePath << "status:" << docLoadStatus;
         std::terminate();
     }
-    m_imageViewer->setPixmap(getImageFilePath());
+    m_currentPageIndex = m_pdfDoc.pageCount() - 1;
+    m_imageViewer->setPixmap(getPage(m_currentPageIndex));
 
     m_signatures.resize(m_pdfDoc.pageCount());
 
@@ -78,7 +62,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::onNewSignature(QPoint position) {
-    auto signature = QPointer(new SignatureTargetWidget(QPixmap("images/signature.png"), m_imageViewer));
+    auto signature = QPointer(new SignatureTargetWidget(getSignaturePixmap(), m_imageViewer));
     m_signatures[m_currentPageIndex].append(signature);
 
     // Center it.
@@ -97,13 +81,11 @@ void MainWindow::onPrevPage() {
 }
 
 void MainWindow::goToPage(int pageIndex) {
-    const auto filePath = getImageFilePath(pageIndex);
-    if (filePath.isEmpty()) {
+    if (pageIndex < 0 || pageIndex >= m_pdfDoc.pageCount()) {
         return;
     }
 
-    QPixmap pixmap(filePath);
-    m_imageViewer->setPixmap(pixmap);
+    m_imageViewer->setPixmap(getPage(pageIndex));
 
     filterRemovedSignatures(m_currentPageIndex);
     hideSignatures(m_currentPageIndex);
@@ -129,4 +111,14 @@ void MainWindow::showSignatures(int pageIndex) {
 
 void MainWindow::filterRemovedSignatures(int pageIndex) {
     erase_if(m_signatures[pageIndex], [](auto p) { return p == nullptr; });
+}
+
+QPixmap MainWindow::getPage(int pageIndex) {
+    auto size = m_pdfDoc.pagePointSize(pageIndex);
+    /* TODO
+    auto scaleFactor = 
+    size *= std::min(size.height()....
+    */
+    auto image = m_pdfDoc.render(pageIndex, size.toSize());
+    return QPixmap::fromImage(image);
 }
