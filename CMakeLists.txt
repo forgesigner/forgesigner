@@ -11,6 +11,7 @@ set(SOURCES
     src/main.cpp
     src/ImageViewer.cpp
     src/Sidebar.cpp
+    src/MainWindow.cpp
 )
 
 # # Doesn't work due to following error:
