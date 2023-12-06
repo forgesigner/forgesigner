@@ -11,7 +11,7 @@
 #include <QVBoxLayout>
 
 namespace {
-    QString getImageFilePath(const int index = 0) {
+    QStringList getFilePathList() {
         QDir imageDir("images");
         QStringList filters;
         filters << "*.png"
@@ -19,13 +19,23 @@ namespace {
                 << "*.jpeg"
                 << "*.bmp";
         imageDir.setNameFilters(filters);
+        auto filePathList = imageDir.entryList();
+        for (auto& fileName : filePathList) {
+            fileName = imageDir.absoluteFilePath(fileName);
+        }
+        return filePathList;
+    }
 
-        const auto fileNames = imageDir.entryList();
-        if (index < 0 || index >= fileNames.size()) {
+    QString getImageFilePath(const int index = 0) {
+        const auto filePathList = getFilePathList();
+        if (index < 0 || index >= filePathList.size()) {
             return QString();
         }
-        const auto filePath = imageDir.absoluteFilePath(fileNames[index]);
-        return filePath;
+        return filePathList[index];
+    }
+
+    unsigned getPageCount() {
+        return getFilePathList().size();
     }
 
     QWidget* getSeparatorWidget(QWidget* parent) {
