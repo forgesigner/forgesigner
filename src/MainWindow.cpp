@@ -142,15 +142,16 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
 
     QPainter pdfPainter(&pdfWriter);
     pdfPainter.setRenderHint(QPainter::Antialiasing);
-
     for (int pageIndex = 0; pageIndex < m_pdfDoc.pageCount(); ++pageIndex) {
-        auto signedPage = paintSignaturesOnPage(pageIndex);
-        // pdfPainter.drawImage(pdfWriter.pageSize().sizePoints(), signedPage);
-        pdfPainter.drawImage(pdfWriter.pageLayout().paintRect(), signedPage.toImage());
-        pdfWriter.newPage();
+        const auto signedPage = paintSignaturesOnPage(pageIndex);
+        const auto paintRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.3, pdfWriter.logicalDpiY() * 11.7);
+        pdfPainter.drawImage(paintRect, signedPage.toImage());
+        if (pageIndex != m_pdfDoc.pageCount()) {
+            pdfWriter.newPage();
+        }
     }
-
     pdfPainter.end();
+
     qDebug() << "MainWindow::writeSignedPdf, finished writing";
     QDesktopServices::openUrl(pdfFileName);
 }
