@@ -34,10 +34,6 @@ namespace {
         return filePathList[index];
     }
 
-    unsigned getPageCount() {
-        return getFilePathList().size();
-    }
-
     QWidget* getSeparatorWidget(QWidget* parent) {
         QFrame* separator = new QFrame(parent);
         separator->setFrameShape(QFrame::VLine);
@@ -46,8 +42,9 @@ namespace {
     }
 }  // namespace
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
     : QMainWindow(parent)
+    , m_pdfDoc(this)
     , m_sidebar(new Sidebar(this))
     , m_imageViewer(new ImageViewer(this)) {
     setWindowTitle("ForgeSigner");
@@ -57,16 +54,24 @@ MainWindow::MainWindow(QWidget* parent)
 
     mainLayout->addWidget(m_sidebar);
     mainLayout->addWidget(getSeparatorWidget(this));
-
-    m_imageViewer->setPixmap(getImageFilePath());
     mainLayout->addWidget(m_imageViewer);
+
+    const auto docLoadStatus = m_pdfDoc.load(pdfFilePath);
+    if (docLoadStatus != QPdfDocument::Error::None) {
+        qFatal() << "couldn't load PDF file" << pdfFilePath << "error:" << docLoadStatus;
+        std::terminate();
+    }
+    if (m_pdfDoc.status() != QPdfDocument::Status::Ready) {
+        qFatal() << "couldn't load PDF file" << pdfFilePath << "status:" << docLoadStatus;
+        std::terminate();
+    }
+    m_imageViewer->setPixmap(getImageFilePath());
+
+    m_signatures.resize(m_pdfDoc.pageCount());
 
     connect(m_sidebar, &Sidebar::gotNextPage, this, &MainWindow::onNextPage);
     connect(m_sidebar, &Sidebar::gotPrevPage, this, &MainWindow::onPrevPage);
-
     connect(m_imageViewer, &ImageViewer::gotNewSignature, this, &MainWindow::onNewSignature);
-
-    m_signatures.resize(getPageCount());
 }
 
 MainWindow::~MainWindow() {

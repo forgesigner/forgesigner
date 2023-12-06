@@ -4,6 +4,7 @@
 
 #include <QList>
 #include <QMainWindow>
+#include <QPdfDocument>
 #include <QPointer>
 
 class QLabel;
@@ -17,7 +18,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    MainWindow(const QString& pdfFilePath, QWidget* parent = nullptr);
     ~MainWindow() override;
 
 private:
@@ -32,8 +33,10 @@ private:
     void filterRemovedSignatures(int pageIndex);
 
 private:
+    QPdfDocument m_pdfDoc{};
+
     int m_currentPageIndex{0};
-    QList<SignatureSet> m_signatures;
+    QList<SignatureSet> m_signatures{};
 
     ImageViewer* m_imageViewer{nullptr};
     Sidebar* m_sidebar{nullptr};
