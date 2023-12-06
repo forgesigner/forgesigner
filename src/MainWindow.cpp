@@ -73,7 +73,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::onNewSignature(QPoint position) {
-    // Draw a small red square at the clicked position
     auto signature = QPointer(new SignatureTargetWidget(QPixmap("images/signature.png"), m_imageViewer));
     m_signatures[m_currentImageIndex].append(signature);
 
@@ -85,21 +84,15 @@ void MainWindow::onNewSignature(QPoint position) {
 }
 
 void MainWindow::onNextImage() {
-    const auto filePath = getImageFilePath(m_currentImageIndex + 1);
-    if (filePath.isEmpty()) {
-        return;
-    }
-
-    QPixmap pixmap(filePath);
-    m_imageViewer->setPixmap(pixmap);
-
-    hideSignatures(m_currentImageIndex);
-    ++m_currentImageIndex;
-    showSignatures(m_currentImageIndex);
+    goToPage(m_currentImageIndex + 1);
 }
 
 void MainWindow::onPrevImage() {
-    const auto filePath = getImageFilePath(m_currentImageIndex - 1);
+    goToPage(m_currentImageIndex - 1);
+}
+
+void MainWindow::goToPage(int pageIndex) {
+    const auto filePath = getImageFilePath(pageIndex);
     if (filePath.isEmpty()) {
         return;
     }
@@ -107,9 +100,10 @@ void MainWindow::onPrevImage() {
     QPixmap pixmap(filePath);
     m_imageViewer->setPixmap(pixmap);
 
+    filterRemovedSignatures(m_currentImageIndex);
     hideSignatures(m_currentImageIndex);
-    --m_currentImageIndex;
-    showSignatures(m_currentImageIndex);
+    showSignatures(pageIndex);
+    m_currentImageIndex = pageIndex;
 }
 
 void MainWindow::hideSignatures(int pageIndex) {

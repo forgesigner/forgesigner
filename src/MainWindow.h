@@ -24,6 +24,7 @@ public:
 private:
     void onNextImage();
     void onPrevImage();
+    void goToPage(int pageIndex);
 
     void onNewSignature(QPoint position);
 
