@@ -2,12 +2,12 @@
 
 #include <QDir>
 #include <QFrame>
-#include <QMouseEvent>
-#include <QLabel>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QMouseEvent>
+#include <QVBoxLayout>
 
-QString getImageFilePath() {
+QString getImageFilePath(const int index = 0) {
     QDir imageDir("images");
     QStringList filters;
     filters << "*.png"
@@ -15,7 +15,12 @@ QString getImageFilePath() {
             << "*.jpeg"
             << "*.bmp";
     imageDir.setNameFilters(filters);
-    const auto filePath = imageDir.absoluteFilePath(imageDir.entryList()[0]);
+
+    const auto fileNames = imageDir.entryList();
+    if (index < 0 || index >= fileNames.size()) {
+        return QString();
+    }
+    const auto filePath = imageDir.absoluteFilePath(fileNames[index]);
     return filePath;
 }
 
@@ -45,6 +50,27 @@ ImageViewer::ImageViewer(QWidget* parent)
     m_image->setPixmap(pixmap);
 
     mainLayout->addWidget(m_image);
+
+    connect(m_sidebar, &Sidebar::gotNextPage, this, &ImageViewer::onNextImage);
+    connect(m_sidebar, &Sidebar::gotPrevPage, this, &ImageViewer::onPrevImage);
+}
+
+void ImageViewer::onNextImage() {
+    const auto filePath = getImageFilePath(m_currentImageIndex + 1);
+    if (!filePath.isEmpty()) {
+        QPixmap pixmap(filePath);
+        m_image->setPixmap(pixmap);
+        ++m_currentImageIndex;
+    }
+}
+
+void ImageViewer::onPrevImage() {
+    const auto filePath = getImageFilePath(m_currentImageIndex - 1);
+    if (!filePath.isEmpty()) {
+        QPixmap pixmap(filePath);
+        m_image->setPixmap(pixmap);
+        --m_currentImageIndex;
+    }
 }
 
 void ImageViewer::mousePressEvent(QMouseEvent* event) {

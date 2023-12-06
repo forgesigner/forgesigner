@@ -17,6 +17,11 @@ public:
     ~ImageViewer() override;
 
 private:
+    void onNextImage();
+    void onPrevImage();
+
+private:
+    int m_currentImageIndex{0};
     QLabel* m_image{nullptr};
     Sidebar* m_sidebar{nullptr};
 };
