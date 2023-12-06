@@ -1,5 +1,7 @@
 #include "ImageViewer.h"
 
+#include "SignatureTargetWidget.h"
+
 #include <QMouseEvent>
 
 ImageViewer::ImageViewer(QWidget* parent)
@@ -17,20 +19,15 @@ void ImageViewer::mousePressEvent(QMouseEvent* event) {
     qDebug() << event->position();
 
     // Draw a small red square at the clicked position
-    const auto squareLabel = new QLabel(this);
-    QPixmap squarePixmap(10, 10);
-    squarePixmap.fill(Qt::red);
-
-    squareLabel->setPixmap(squarePixmap);
-    squareLabel->setAlignment(Qt::AlignCenter);
+    const auto signature = new SignatureTargetWidget(QPixmap("images/signature.png"), this);
 
     auto squarePos = event->position().toPoint();
     // Center it.
-    squarePos -= QPoint(squarePixmap.width() / 2,
-                        squarePixmap.height() / 2);
+    squarePos -= QPoint(signature->width() / 2,
+                        signature->height() / 2);
 
-    squareLabel->move(squarePos);
-    squareLabel->show();
+    signature->move(squarePos);
+    signature->show();
 }
 
 ImageViewer::~ImageViewer() {

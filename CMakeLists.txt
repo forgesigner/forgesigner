@@ -12,6 +12,7 @@ set(SOURCES
     src/ImageViewer.cpp
     src/Sidebar.cpp
     src/MainWindow.cpp
+    src/SignatureTargetWidget.cpp
 )
 
 # # Doesn't work due to following error:
