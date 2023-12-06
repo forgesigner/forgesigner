@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , m_sidebar(new Sidebar(this))
     , m_imageViewer(new ImageViewer(this)) {
-    setWindowTitle("Image Viewer");
+    setWindowTitle("ForgeSigner");
     setCentralWidget(new QWidget);
 
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget());
@@ -61,8 +61,8 @@ MainWindow::MainWindow(QWidget* parent)
     m_imageViewer->setPixmap(getImageFilePath());
     mainLayout->addWidget(m_imageViewer);
 
-    connect(m_sidebar, &Sidebar::gotNextPage, this, &MainWindow::onNextImage);
-    connect(m_sidebar, &Sidebar::gotPrevPage, this, &MainWindow::onPrevImage);
+    connect(m_sidebar, &Sidebar::gotNextPage, this, &MainWindow::onNextPage);
+    connect(m_sidebar, &Sidebar::gotPrevPage, this, &MainWindow::onPrevPage);
 
     connect(m_imageViewer, &ImageViewer::gotNewSignature, this, &MainWindow::onNewSignature);
 
@@ -74,7 +74,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::onNewSignature(QPoint position) {
     auto signature = QPointer(new SignatureTargetWidget(QPixmap("images/signature.png"), m_imageViewer));
-    m_signatures[m_currentImageIndex].append(signature);
+    m_signatures[m_currentPageIndex].append(signature);
 
     // Center it.
     position -= QPoint(signature->width() / 2,
@@ -83,12 +83,12 @@ void MainWindow::onNewSignature(QPoint position) {
     signature->show();
 }
 
-void MainWindow::onNextImage() {
-    goToPage(m_currentImageIndex + 1);
+void MainWindow::onNextPage() {
+    goToPage(m_currentPageIndex + 1);
 }
 
-void MainWindow::onPrevImage() {
-    goToPage(m_currentImageIndex - 1);
+void MainWindow::onPrevPage() {
+    goToPage(m_currentPageIndex - 1);
 }
 
 void MainWindow::goToPage(int pageIndex) {
@@ -100,10 +100,10 @@ void MainWindow::goToPage(int pageIndex) {
     QPixmap pixmap(filePath);
     m_imageViewer->setPixmap(pixmap);
 
-    filterRemovedSignatures(m_currentImageIndex);
-    hideSignatures(m_currentImageIndex);
+    filterRemovedSignatures(m_currentPageIndex);
+    hideSignatures(m_currentPageIndex);
     showSignatures(pageIndex);
-    m_currentImageIndex = pageIndex;
+    m_currentPageIndex = pageIndex;
 }
 
 void MainWindow::hideSignatures(int pageIndex) {

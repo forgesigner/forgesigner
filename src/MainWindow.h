@@ -17,12 +17,12 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
 private:
-    void onNextImage();
-    void onPrevImage();
+    void onNextPage();
+    void onPrevPage();
     void goToPage(int pageIndex);
 
     void onNewSignature(QPoint position);
@@ -32,7 +32,7 @@ private:
     void filterRemovedSignatures(int pageIndex);
 
 private:
-    int m_currentImageIndex{0};
+    int m_currentPageIndex{0};
     QList<SignatureSet> m_signatures;
 
     ImageViewer* m_imageViewer{nullptr};

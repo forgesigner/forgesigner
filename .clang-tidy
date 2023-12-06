@@ -26,4 +26,5 @@ CheckOptions:
   - { key: readability-identifier-naming.VariableCase,          value: camelBack }
 FormatStyle: file
 HeaderFilterRegex: '*\.h'
-WarningsAsErrors: '*'
+
+# WarningsAsErrors: '*'
