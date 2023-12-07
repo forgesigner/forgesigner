@@ -49,7 +49,7 @@ private:
     int m_currentPageIndex{0};
     QList<SignatureSet> m_signatures{};
 
-    InitialHintProvider m_initialHintProvider; // TODO: ??
+    InitialHintProvider m_initialHintProvider{};
 
     ImageViewer* m_imageViewer{nullptr};
     Sidebar* m_sidebar{nullptr};
