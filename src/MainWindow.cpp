@@ -32,6 +32,7 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
     : QMainWindow(parent)
     , m_pdfFilePath(pdfFilePath)
     , m_pdfDoc(this)
+    , m_initialHintProvider("")
     , m_sidebar(new Sidebar(this))
     , m_imageViewer(new ImageViewer(this)) {
     setWindowTitle("ForgeSigner");
