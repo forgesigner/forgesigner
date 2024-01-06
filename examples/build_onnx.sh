@@ -1,1 +1,1 @@
-clang++ -Lonnxruntime -lonnxruntime main.cpp 
+clang++ -std=c++20 -Lonnxruntime -lonnxruntime main.cpp 
