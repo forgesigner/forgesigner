@@ -22,7 +22,7 @@ void print_output_to_file(const auto& data, const std::string& file_path) {
 int main() {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntimeModel");
 
-    const std::string model_path = "best_checkpoint.onnx";
+    const std::string model_path = "bottom_right_pixel_model.onnx";
 
     Ort::SessionOptions session_options;
     Ort::Session session(env, model_path.c_str(), session_options);
@@ -41,7 +41,7 @@ int main() {
     constexpr int64_t output_size = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int64_t>());
     std::vector<float> raw_output(output_size, 0);
     // following has to be possible but doesn't work: const auto names = session.GetOutputNames();
-    const char* const output_names[] = {"227"};
+    const char* const output_names[] = {"293"};
     Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
         memory_info, raw_output.data(), raw_output.size(), output_shape.data(), output_shape.size()
     );

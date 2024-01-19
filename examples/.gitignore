@@ -1,0 +1,5 @@
+onnx_model_raw_output.txt
+
+# executables from cpp files
+get_input_and_output_names_from_onnx_file
+main
