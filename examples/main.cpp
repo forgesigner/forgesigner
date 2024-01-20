@@ -7,7 +7,7 @@
 #include <vector>
 #include <numeric>
 
-void print_output_to_file(const auto& data, const std::string& file_path) {
+void printOutputToFile(const auto& data, const std::string& file_path) {
     std::ofstream output_file(file_path);
     if (!output_file.is_open()) {
         std::cerr << "Error opening file: " << file_path << std::endl;
@@ -22,36 +22,33 @@ void print_output_to_file(const auto& data, const std::string& file_path) {
 int main() {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntimeModel");
 
-    const std::string model_path = "bottom_right_pixel_model.onnx";
+    const std::string modelPath = "bottom_right_pixel_model.onnx";
 
-    Ort::SessionOptions session_options;
-    Ort::Session session(env, model_path.c_str(), session_options);
+    Ort::Session session(env, modelPath.c_str(), Ort::SessionOptions{});
 
-    auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+    auto memoryInfo = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
-    constexpr auto input_shape = std::array<int64_t, 4>{1, 3, 936, 662};
-    const char* const input_names[] = {"input.1"};
-    constexpr int64_t input_size = std::accumulate(input_shape.begin(), input_shape.end(), 1, std::multiplies<int64_t>());
-    std::vector<float> raw_input(input_size, 0);
-    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, raw_input.data(), raw_input.size(), input_shape.data(), input_shape.size()
+    constexpr auto inputShape = std::array<int64_t, 4>{1, 3, 936, 662};
+    const char* const inputNames[] = {"input.1"};
+    constexpr int64_t inputSize = std::accumulate(inputShape.begin(), inputShape.end(), 1, std::multiplies<int64_t>());
+    std::vector<float> rawInput(inputSize, 0);
+    Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
+        memoryInfo, rawInput.data(), rawInput.size(), inputShape.data(), inputShape.size()
     );
 
-    constexpr auto output_shape = std::array<int64_t, 4>{1, 1, 936, 662};
-    constexpr int64_t output_size = std::accumulate(output_shape.begin(), output_shape.end(), 1, std::multiplies<int64_t>());
-    std::vector<float> raw_output(output_size, 0);
-    // following has to be possible but doesn't work: const auto names = session.GetOutputNames();
-    const char* const output_names[] = {"293"};
-    Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, raw_output.data(), raw_output.size(), output_shape.data(), output_shape.size()
+    constexpr auto outputShape = std::array<int64_t, 4>{1, 1, 936, 662};
+    constexpr int64_t outputSize = std::accumulate(outputShape.begin(), outputShape.end(), 1, std::multiplies<int64_t>());
+    std::vector<float> rawOutput(outputSize, 0);
+    const char* const outputNames[] = {"293"};
+    Ort::Value outputTensor = Ort::Value::CreateTensor<float>(
+        memoryInfo, rawOutput.data(), rawOutput.size(), outputShape.data(), outputShape.size()
     );
 
-    Ort::RunOptions run_options{};
-    constexpr size_t input_count = 1;
-    constexpr size_t output_count = 1;
-    session.Run(run_options, input_names, &input_tensor, input_count,
-                             output_names, &output_tensor, output_count);
+    constexpr size_t inputCount = 1;
+    constexpr size_t outputCount = 1;
+    session.Run(Ort::RunOptions{}, inputNames, &inputTensor, inputCount,
+                             outputNames, &outputTensor, outputCount);
     
     // Write tensor to disk, then examine the output visually in Python, for simplicity
-    print_output_to_file(raw_output, "onnx_model_raw_output.txt");
+    printOutputToFile(rawOutput, "onnx_model_raw_output.txt");
 }
