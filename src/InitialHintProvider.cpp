@@ -1,8 +1,49 @@
 #include "InitialHintProvider.h"
 
-#include <QFile>
 #include <QDebug>
+#include <QFile>
+#include <QImage>
 #include <QtLogging>
+
+namespace {
+    /* Return nullopt if model unexpectedly has more than 1 input */
+    std::optional<std::string> getInputName(const Ort::Session& session) {
+        const auto inputCount = session.GetInputCount();
+        if (inputCount != 1) {
+            return std::nullopt;
+        }
+        const auto namePtr = session.GetInputNameAllocated(0, Ort::AllocatorWithDefaultOptions());
+        return std::string(namePtr.get());
+    }
+
+    /* Return nullopt if model unexpectedly has more than 1 output */
+    std::optional<std::string> getOutputName(const Ort::Session& session) {
+        const auto outputCount = session.GetOutputCount();
+        if (outputCount != 1) {
+            return std::nullopt;
+        }
+        const auto namePtr = session.GetOutputNameAllocated(0, Ort::AllocatorWithDefaultOptions());
+        return std::string(namePtr.get());
+    }
+
+    /* Return nullopt if model unexpectedly has more than 1 input */
+    std::optional<const std::vector<int64_t>> getInputShape(const Ort::Session& session) {
+        const auto inputCount = session.GetInputCount();
+        if (inputCount != 1) {
+            return std::nullopt;
+        }
+        return session.GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    }
+
+    /* Return nullopt if model unexpectedly has more than 1 output */
+    std::optional<const std::vector<int64_t>> getOutputShape(const Ort::Session& session) {
+        const auto outputCount = session.GetOutputCount();
+        if (outputCount != 1) {
+            return std::nullopt;
+        }
+        return session.GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    }
+}
 
 InitialHintProvider::InitialHintProvider() {
 }
@@ -14,9 +55,8 @@ void InitialHintProvider::loadModel(const QString& pathToOnnxModel) {
         return;
     }
 
-    const char* pathToModel = pathToOnnxModel.toUtf8().constData();
     try {
-        m_onnxSession = Ort::Session(m_onnxEnv, pathToModel, m_onnxSessionOptions);
+        m_onnxSession = Ort::Session(m_onnxEnv, pathToOnnxModel.toUtf8().constData(), m_onnxSessionOptions);
         m_isAvailable = true;
     } catch (const Ort::Exception& e) {
         m_isAvailable = false;
@@ -25,16 +65,61 @@ void InitialHintProvider::loadModel(const QString& pathToOnnxModel) {
     }
 }
 
-QList<QList<QPoint>> InitialHintProvider::provideHints(const QList<QPixmap> pages) const {
-    std::vector<float> input_data = { /* your input data here */ };
-    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-        m_onnxEnv, input_data.data(), input_data.size(), );
-    return {};
-}
+QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) const {
+    if (!isAvailable()) {
+        return {};
+    }
+    if (page.isNull()) {
+        qCritical() << "page is null";
+        return {};
+    }
 
-// OutputTensor runModel(InputTensor inputTensor) {
-void runModel() {
-    // const char* inputNames[] = {"input"};
-    // const char* outputNames[] = {"output"};
-    // Ort::Value outputTensor = onnx_session.Run(runOptions, inputNames, &inputTensor, 1, outputNames, 1);
+    // Step 1: rescale QImage to model input size
+    const auto inputShapeOpt = getInputShape(m_onnxSession);
+    if (!inputShapeOpt || inputShapeOpt->size() != 4) {
+        return  {};
+    }
+    const auto& inputShape = inputShapeOpt.value();
+    const auto batchSize = inputShape[0];
+    // TODO: why aren't we using grayscale in the model?
+    // Answer: because torchvision.models.resnet18 backbone expects 3 input channels.
+    const auto numChannels = inputShape[1];
+    assert(numChannels == 3);
+    const auto height = inputShape[2];
+    const auto width = inputShape[3];
+    page = page.scaled(width, height, Qt::IgnoreAspectRatio);
+
+    // Step 2: ensure 32-bit RGB format (0xffRRGGBB).
+    page = page.convertToFormat(QImage::Format_RGB32);
+    const size_t bytesPerPixel = 4;
+    const size_t oneChannelSize = height * width;
+
+    // Step 3: convert QImage to raw data for Ort input tensor.
+    const auto inputSize = batchSize * numChannels * oneChannelSize;
+    // Think of this as (C, H, W) pytorch tensor, to which torch.flatten has been applied
+    std::vector<float> rawInput(inputSize, 0);
+
+    for (size_t h = 0; h < height; ++h) {
+        for (size_t w = 0; w < width; ++w) {
+            const size_t channelIndex = h * width + w;
+            const auto pixel = page.pixel(h, w);
+
+            rawInput[channelIndex] = qRed(pixel);
+            rawInput[channelIndex + oneChannelSize] = qGreen(pixel);
+            rawInput[channelIndex + 2 * oneChannelSize] = qBlue(pixel);
+        }
+    }
+
+    auto normalizeToZeroOne = [](auto x) {
+        return x / 255.0;
+    };
+    std::transform(rawInput.begin(), rawInput.end(), rawInput.begin(), normalizeToZeroOne);
+
+    auto memoryInfo = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+    Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
+        memoryInfo, rawInput.data(), rawInput.size(), inputShape.data(), inputShape.size()
+    );
+
+    // Step 4: run the model on the input tensor TODO
+    return {}; // TODO
 }

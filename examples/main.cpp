@@ -20,6 +20,14 @@ void printOutputToFile(const auto& data, const std::string& file_path) {
     }
 }
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& collection) {
+    for (const auto& el : collection) {
+        os << el << ", ";
+    }
+    return os;
+}
+
 /* Return nullopt if model unexpectedly has more than 1 input */
 std::optional<std::string> getInputName(const Ort::Session& session) {
     const auto inputCount = session.GetInputCount();
@@ -61,15 +69,18 @@ std::optional<const std::vector<int64_t>> getOutputShape(const Ort::Session& ses
 int main() {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntimeModel");
 
-    const std::string modelPath = "bottom_right_pixel_model.onnx";
+    const std::string modelPath = "best_checkpoint.onnx";
 
-    Ort::Session session(env, modelPath.c_str(), Ort::SessionOptions{});
+    Ort::Session session(nullptr);
+    session = Ort::Session(env, modelPath.c_str(), Ort::SessionOptions{});
+    // Ort::Session session(env, modelPath.c_str(), Ort::SessionOptions{});
 
     auto memoryInfo = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
     const auto singleInputName = getInputName(session).value();
     const char* const inputNames[] = {singleInputName.c_str()};
     const auto inputShape = getInputShape(session).value();
+    std::cout << inputShape << std::endl;
     const int64_t inputSize = std::accumulate(inputShape.begin(), inputShape.end(), 1, std::multiplies<int64_t>());
     std::vector<float> rawInput(inputSize, 0);
     Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
