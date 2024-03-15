@@ -5,6 +5,8 @@
 #include <QImage>
 #include <QtLogging>
 
+#include <algorithm>
+
 namespace {
     /* Return nullopt if model unexpectedly has more than 1 input */
     std::optional<std::string> getInputName(const Ort::Session& session) {
@@ -65,7 +67,7 @@ void InitialHintProvider::loadModel(const QString& pathToOnnxModel) {
     }
 }
 
-QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) const {
+QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
     if (!isAvailable()) {
         return {};
     }
@@ -120,6 +122,39 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) const 
         memoryInfo, rawInput.data(), rawInput.size(), inputShape.data(), inputShape.size()
     );
 
-    // Step 4: run the model on the input tensor TODO
-    return {}; // TODO
+    // Step 4: run the model on the input tensor
+    const auto inputNamesOpt = getInputName(m_onnxSession);
+    if (!inputNamesOpt) {
+        return {};
+    }
+    const auto inputNames = inputNamesOpt.value().c_str();
+
+    const auto outputNamesOpt = getOutputName(m_onnxSession);
+    if (!outputNamesOpt) {
+        return {};
+    }
+    const auto outputNames = outputNamesOpt.value().c_str();
+
+    const auto allOutputs = m_onnxSession.Run(
+        Ort::RunOptions{}, &inputNames, &inputTensor, 1, &outputNames, 1
+    );
+    if (allOutputs.size() == 0) {
+        return {};
+    }
+    const auto& outputTensor = allOutputs[0];
+
+    // Step 5: interpret outputTensor as 2D grayscale heatmap, extract argmax coordinates
+    // TODO: currently supports only single point, use a smarter algo to output N hints.
+    const float* const rawOutput = outputTensor.GetTensorData<float>();
+    const size_t outputSize = outputTensor.GetTensorTypeAndShapeInfo().GetElementCount();
+    if (outputSize != oneChannelSize) {
+        return {};
+    }
+    const float* const maxElementPtr = std::max_element(rawOutput, rawOutput + outputSize);
+    const size_t argmaxIndex = std::distance(rawOutput, maxElementPtr);
+
+    const size_t argmaxHeightIndex = argmaxIndex / width;
+    const size_t argmaxWidthIndex = argmaxIndex % width;
+
+    return {QPoint(argmaxWidthIndex, argmaxHeightIndex)};
 }

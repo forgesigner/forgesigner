@@ -17,7 +17,7 @@ public:
         return m_isAvailable;
     }
     
-    QList<QPoint> provideHintsForSinglePage(QImage page) const;
+    QList<QPoint> provideHintsForSinglePage(QImage page);
 
 private:
     bool m_isAvailable{false};
