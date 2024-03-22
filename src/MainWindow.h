@@ -27,7 +27,6 @@ private:
     void onPrevPage();
     void goToPage(int pageIndex);
 
-    void initSignaturesFromHints(int pageIndex);
     void onNewSignature(QPoint position);
 
     void hideSignatures(int pageIndex);

@@ -82,6 +82,7 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
         return  {};
     }
     const auto& inputShape = inputShapeOpt.value();
+    // PyTorch input tensor with images has shape (N, C, H, W).
     const auto batchSize = inputShape[0];
     // TODO: why aren't we using grayscale in the model?
     // Answer: because torchvision.models.resnet18 backbone expects 3 input channels.
@@ -89,6 +90,9 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
     assert(numChannels == 3);
     const auto height = inputShape[2];
     const auto width = inputShape[3];
+    // qDebug() << "width" << width << "height" << height << "!!!";
+    const auto originalWidth = page.width();
+    const auto originalHeight = page.height();
     page = page.scaled(width, height, Qt::IgnoreAspectRatio);
 
     // Step 2: ensure 32-bit RGB format (0xffRRGGBB).
@@ -98,7 +102,7 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
 
     // Step 3: convert QImage to raw data for Ort input tensor.
     const auto inputSize = batchSize * numChannels * oneChannelSize;
-    // Think of this as (C, H, W) pytorch tensor, to which torch.flatten has been applied
+    // Think of this as (N, C, H, W) pytorch tensor, to which torch.flatten has been applied
     std::vector<float> rawInput(inputSize, 0);
 
     for (size_t h = 0; h < height; ++h) {
@@ -156,5 +160,9 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
     const size_t argmaxHeightIndex = argmaxIndex / width;
     const size_t argmaxWidthIndex = argmaxIndex % width;
 
-    return {QPoint(argmaxWidthIndex, argmaxHeightIndex)};
+    return {
+        // Don't forget to scale the argmax coords back to original image size
+        QPoint(argmaxWidthIndex * originalWidth / width,
+               argmaxHeightIndex * originalHeight / height)
+    };
 }

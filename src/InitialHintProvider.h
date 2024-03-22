@@ -7,7 +7,6 @@
 #include <QImage>
 
 class QString;
-class QPixmap;
 
 class InitialHintProvider {
 public:
@@ -17,6 +16,7 @@ public:
         return m_isAvailable;
     }
     
+    // First hints in the list are more confident
     QList<QPoint> provideHintsForSinglePage(QImage page);
 
 private:
