@@ -27,20 +27,18 @@ private:
     void onPrevPage();
     void goToPage(int pageIndex);
 
-    void initSignaturesFromHints();  // TODO: ??
+    void initSignaturesFromHints(int pageIndex);
     void onNewSignature(QPoint position);
-    // void addNewSignature(QPoint position);  // TODO: needed ?
 
     void hideSignatures(int pageIndex);
     void showSignatures(int pageIndex);
     void filterRemovedSignatures(int pageIndex);
 
-    QPixmap getPage(int pageIndex);
+    QImage getPage(int pageIndex);
 
     void onFinishedSigning();
     void writeSignedPdf(const QString& pdfFilePath);
-    QPixmap paintSignaturesOnPage(int pageIndex);
-
+    QImage paintSignaturesOnPage(int pageIndex);
 
 private:
     const QString m_pdfFilePath;
@@ -51,6 +49,6 @@ private:
 
     InitialHintProvider m_initialHintProvider{};
 
-    ImageViewer* m_imageViewer{nullptr};
     Sidebar* m_sidebar{nullptr};
+    ImageViewer* m_imageViewer{nullptr};
 };

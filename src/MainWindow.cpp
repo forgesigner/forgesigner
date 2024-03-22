@@ -32,6 +32,7 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
     : QMainWindow(parent)
     , m_pdfFilePath(pdfFilePath)
     , m_pdfDoc(this)
+    , m_initialHintProvider()
     , m_sidebar(new Sidebar(this))
     , m_imageViewer(new ImageViewer(this)) {
     setWindowTitle("ForgeSigner");
@@ -53,7 +54,8 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
         std::terminate();
     }
     m_currentPageIndex = m_pdfDoc.pageCount() - 1;
-    m_imageViewer->setPixmap(getPage(m_currentPageIndex));
+    auto lastPage = getPage(m_currentPageIndex);
+    m_imageViewer->setPixmap(QPixmap::fromImage(lastPage));
 
     m_signatures.resize(m_pdfDoc.pageCount());
 
@@ -62,6 +64,14 @@ MainWindow::MainWindow(const QString& pdfFilePath, QWidget* parent)
     connect(m_sidebar, &Sidebar::gotFinishedSigning, this, &MainWindow::onFinishedSigning);
 
     connect(m_imageViewer, &ImageViewer::gotNewSignature, this, &MainWindow::onNewSignature);
+
+    m_initialHintProvider.loadModel("examples/best_checkpoint.onnx");
+    auto signatureHints = m_initialHintProvider.provideHintsForSinglePage(lastPage);
+    if (!signatureHints.empty()) {
+        for (const auto pos : signatureHints) {
+            onNewSignature(pos);
+        }
+    }
 }
 
 MainWindow::~MainWindow() {
@@ -91,7 +101,7 @@ void MainWindow::goToPage(int pageIndex) {
         return;
     }
 
-    m_imageViewer->setPixmap(getPage(pageIndex));
+    m_imageViewer->setPixmap(QPixmap::fromImage(getPage(pageIndex)));
 
     filterRemovedSignatures(m_currentPageIndex);
     hideSignatures(m_currentPageIndex);
@@ -119,14 +129,14 @@ void MainWindow::filterRemovedSignatures(int pageIndex) {
     erase_if(m_signatures[pageIndex], [](auto p) { return p == nullptr; });
 }
 
-QPixmap MainWindow::getPage(int pageIndex) {
+QImage MainWindow::getPage(int pageIndex) {
     auto size = m_pdfDoc.pagePointSize(pageIndex);
     /* TODO
     auto scaleFactor = 
     size *= std::min(size.height()....
     */
     auto image = m_pdfDoc.render(pageIndex, size.toSize());
-    return QPixmap::fromImage(image);
+    return image;
 }
 
 void MainWindow::onFinishedSigning() {
@@ -145,7 +155,7 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
     for (int pageIndex = 0; pageIndex < m_pdfDoc.pageCount(); ++pageIndex) {
         const auto signedPage = paintSignaturesOnPage(pageIndex);
         const auto paintRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.3, pdfWriter.logicalDpiY() * 11.7);
-        pdfPainter.drawImage(paintRect, signedPage.toImage());
+        pdfPainter.drawImage(paintRect, signedPage);
         if (pageIndex != m_pdfDoc.pageCount()) {
             pdfWriter.newPage();
         }
@@ -156,7 +166,7 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
     QDesktopServices::openUrl(pdfFileName);
 }
 
-QPixmap MainWindow::paintSignaturesOnPage(int pageIndex) {
+QImage MainWindow::paintSignaturesOnPage(int pageIndex) {
     auto page = getPage(pageIndex);
     const auto signature = getSignaturePixmap();
 
