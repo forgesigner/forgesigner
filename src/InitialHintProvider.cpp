@@ -104,7 +104,7 @@ QList<QPoint> InitialHintProvider::provideHintsForSinglePage(QImage page) {
     for (size_t h = 0; h < height; ++h) {
         for (size_t w = 0; w < width; ++w) {
             const size_t channelIndex = h * width + w;
-            const auto pixel = page.pixel(h, w);
+            const auto pixel = page.pixel(w, h);
 
             rawInput[channelIndex] = qRed(pixel);
             rawInput[channelIndex + oneChannelSize] = qGreen(pixel);
