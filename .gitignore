@@ -74,6 +74,3 @@ fabric.properties
 # Images used for debug 
 images/
 output.pdf
-
-# Code snippets and drafts
-examples/
