@@ -1,5 +1,6 @@
 #pragma once
 
+#include "InitialHintProvider.h"
 #include "SignatureTargetWidget.h"
 
 #include <QList>
@@ -32,11 +33,11 @@ private:
     void showSignatures(int pageIndex);
     void filterRemovedSignatures(int pageIndex);
 
-    QPixmap getPage(int pageIndex);
+    QImage getPage(int pageIndex);
 
     void onFinishedSigning();
     void writeSignedPdf(const QString& pdfFilePath);
-    QPixmap paintSignaturesOnPage(int pageIndex);
+    QImage paintSignaturesOnPage(int pageIndex);
 
 private:
     const QString m_pdfFilePath;
@@ -45,6 +46,8 @@ private:
     int m_currentPageIndex{0};
     QList<SignatureSet> m_signatures{};
 
-    ImageViewer* m_imageViewer{nullptr};
+    InitialHintProvider m_initialHintProvider{};
+
     Sidebar* m_sidebar{nullptr};
+    ImageViewer* m_imageViewer{nullptr};
 };
