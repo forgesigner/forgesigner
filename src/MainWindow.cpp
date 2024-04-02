@@ -130,12 +130,21 @@ void MainWindow::filterRemovedSignatures(int pageIndex) {
 }
 
 QImage MainWindow::getPage(int pageIndex) {
-    auto size = m_pdfDoc.pagePointSize(pageIndex);
+    const auto size = m_pdfDoc.pagePointSize(pageIndex).toSize();
     /* TODO
     auto scaleFactor = 
     size *= std::min(size.height()....
     */
-    auto image = m_pdfDoc.render(pageIndex, size.toSize());
+    auto image = m_pdfDoc.render(pageIndex, size);
+    if (image.hasAlphaChannel()) {  // if transparent background, fill it with white
+        QImage imageWithBackground(size, QImage::Format_ARGB32);
+        imageWithBackground.fill(Qt::white);
+
+        QPainter painter(&imageWithBackground);
+        painter.drawImage(0, 0, image);
+        painter.end();
+        return imageWithBackground;
+    }
     return image;
 }
 
