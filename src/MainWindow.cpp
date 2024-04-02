@@ -165,7 +165,7 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
         const auto signedPage = paintSignaturesOnPage(pageIndex);
         const auto paintRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.3, pdfWriter.logicalDpiY() * 11.7);
         pdfPainter.drawImage(paintRect, signedPage);
-        if (pageIndex != m_pdfDoc.pageCount()) {
+        if (pageIndex != m_pdfDoc.pageCount() - 1) {
             pdfWriter.newPage();
         }
     }
