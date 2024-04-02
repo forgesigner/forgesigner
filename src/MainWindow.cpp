@@ -131,21 +131,20 @@ void MainWindow::filterRemovedSignatures(int pageIndex) {
 
 QImage MainWindow::getPage(int pageIndex) {
     const auto size = m_pdfDoc.pagePointSize(pageIndex).toSize();
-    /* TODO
-    auto scaleFactor = 
-    size *= std::min(size.height()....
-    */
     auto image = m_pdfDoc.render(pageIndex, size);
-    if (image.hasAlphaChannel()) {  // if transparent background, fill it with white
-        QImage imageWithBackground(size, QImage::Format_ARGB32);
-        imageWithBackground.fill(Qt::white);
 
-        QPainter painter(&imageWithBackground);
-        painter.drawImage(0, 0, image);
-        painter.end();
-        return imageWithBackground;
+    if (!image.hasAlphaChannel()) {
+        return image;
     }
-    return image;
+
+    // if transparent background, fill it with white
+    QImage imageWithBackground(size, QImage::Format_ARGB32);
+    imageWithBackground.fill(Qt::white);
+
+    QPainter painter(&imageWithBackground);
+    painter.drawImage(0, 0, image);
+    painter.end();
+    return imageWithBackground;
 }
 
 void MainWindow::onFinishedSigning() {
@@ -157,7 +156,7 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
     qDebug() << "MainWindow::writeSignedPdf, writing to" << pdfFileName;
 
     QPdfWriter pdfWriter(pdfFileName);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+    pdfWriter.setPageSize(QPageSize(QPageSize::A4));  // TODO: use the page size from m_pdfDoc
     // pdfWriter.setResolution(300);  // Match the DPI used in m_pdfDoc.render
     pdfWriter.setPageMargins(QMarginsF(0, 0, 0, 0));
 
@@ -166,17 +165,8 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
 
     for (int pageIndex = 0; pageIndex < m_pdfDoc.pageCount(); ++pageIndex) {
         const auto signedPage = paintSignaturesOnPage(pageIndex);
-
         const auto paintRect = QRect(0, 0, pdfWriter.width(), pdfWriter.height());
         pdfPainter.drawImage(paintRect, signedPage);
-
-        // // Uncomment to check the region of the page onto which the image is drawn
-        // const auto tmpAltRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.2677, pdfWriter.logicalDpiY() * 11.6929);
-        // pdfPainter.setPen(QPen(Qt::red, 10));
-        // pdfPainter.drawRect(paintRect);
-        // pdfWriter.newPage();
-        // pdfPainter.drawRect(tmpAltRect);
-        // pdfPainter.drawImage(tmpAltRect, signedPage);
 
         if (pageIndex != m_pdfDoc.pageCount() - 1) {
             pdfWriter.newPage();
