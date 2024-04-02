@@ -158,13 +158,26 @@ void MainWindow::writeSignedPdf(const QString& pdfFileName) {
 
     QPdfWriter pdfWriter(pdfFileName);
     pdfWriter.setPageSize(QPageSize(QPageSize::A4));
+    // pdfWriter.setResolution(300);  // Match the DPI used in m_pdfDoc.render
+    pdfWriter.setPageMargins(QMarginsF(0, 0, 0, 0));
 
     QPainter pdfPainter(&pdfWriter);
     pdfPainter.setRenderHint(QPainter::Antialiasing);
+
     for (int pageIndex = 0; pageIndex < m_pdfDoc.pageCount(); ++pageIndex) {
         const auto signedPage = paintSignaturesOnPage(pageIndex);
-        const auto paintRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.3, pdfWriter.logicalDpiY() * 11.7);
+
+        const auto paintRect = QRect(0, 0, pdfWriter.width(), pdfWriter.height());
         pdfPainter.drawImage(paintRect, signedPage);
+
+        // // Uncomment to check the region of the page onto which the image is drawn
+        // const auto tmpAltRect = QRect(0, 0, pdfWriter.logicalDpiX() * 8.2677, pdfWriter.logicalDpiY() * 11.6929);
+        // pdfPainter.setPen(QPen(Qt::red, 10));
+        // pdfPainter.drawRect(paintRect);
+        // pdfWriter.newPage();
+        // pdfPainter.drawRect(tmpAltRect);
+        // pdfPainter.drawImage(tmpAltRect, signedPage);
+
         if (pageIndex != m_pdfDoc.pageCount() - 1) {
             pdfWriter.newPage();
         }
